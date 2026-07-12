@@ -1,0 +1,22 @@
+{
+  "I": {
+    "descricao": "Isentos (PNAES / CadÚnico)",
+    "cafe_da_manha": 0.00,
+    "almoco_jantar": 0.00
+  },
+  "II": {
+    "descricao": "Pagantes com subsídio (Graduação/Pós)",
+    "cafe_da_manha": 2.00,
+    "almoco_jantar": 4.50
+  },
+  "III": {
+    "descricao": "Público pagante (Sem subsídio)",
+    "cafe_da_manha": 7.05,
+    "almoco_jantar": 15.20
+  },
+  "IV": {
+    "descricao": "Pagantes com subsídio (Demanda Social)",
+    "cafe_da_manha": 1.50,
+    "almoco_jantar": 2.50
+  }
+}
