@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { inicializarCarteiraLace } from "../../services/cardano"; 
-import { getAddressDetails, mintingPolicyToId, scriptFromNative } from "@lucid-evolution/lucid";
 
 const ENDERECO_RU_UNB = "addr_test1qr64pva83qe6mysrfxunvma0f5nutg7krwrn3fapjuqkc8jxpf4hwa5348shsj90aj8490elm4fqalj2h7py49s3086szvqea2";
 
@@ -18,10 +16,8 @@ const BANCO_DE_DADOS_ALUNOS: Record<string, any> = {
     nome: "Eduardo Rodrigues", 
     curso: "Engenharia de Redes de Comunicação", 
     grupo: "Grupo I", 
-    // O endereço abaixo precisará ser atualizado com o que aparecer na tela vermelha!
     carteira_registrada: "addr_test1qphmdgz8r4vx3hhrltlgvfp5qmlpd94wlcuj623ksmcnvxmtrypywe3e9ulraekafh38a2qqqhkf8a09dc26zn4gnf5shumutd" 
   },
-
 };
 
 export default function AppAluno() {
@@ -52,25 +48,36 @@ export default function AppAluno() {
 
   const conectarConta = async () => {
     setConectando(true);
-    const conexao = await inicializarCarteiraLace();
-    if (conexao) {
-      setLucid(conexao.lucid);
-      setEndereco(conexao.endereco);
+    try {
+      // IMPORTAÇÃO DINÂMICA: Carrega a biblioteca apenas no navegador quando o botão for clicado
+      const { inicializarCarteiraLace } = await import("../../services/cardano");
       
-      const alunoEncontrado = Object.values(BANCO_DE_DADOS_ALUNOS).find(
-        (aluno) => aluno.carteira_registrada === conexao.endereco
-      );
-      if (alunoEncontrado) {
-        setAlunoLogado(alunoEncontrado);
+      const conexao = await inicializarCarteiraLace();
+      if (conexao) {
+        setLucid(conexao.lucid);
+        setEndereco(conexao.endereco);
+        
+        const alunoEncontrado = Object.values(BANCO_DE_DADOS_ALUNOS).find(
+          (aluno) => aluno.carteira_registrada === conexao.endereco
+        );
+        if (alunoEncontrado) {
+          setAlunoLogado(alunoEncontrado);
+        }
       }
+    } catch (error) {
+      console.error("Erro ao conectar conta:", error);
+    } finally {
+      setConectando(false);
     }
-    setConectando(false);
   };
 
   useEffect(() => {
     if (!lucid || !endereco) return;
     const buscarSaldo = async () => {
       try {
+        // IMPORTAÇÃO DINÂMICA: Carrega as funções do Lucid apenas no lado do cliente
+        const { getAddressDetails, mintingPolicyToId, scriptFromNative } = await import("@lucid-evolution/lucid");
+        
         const detalhesEndereco = getAddressDetails(endereco);
         const politica = scriptFromNative({ type: "sig", keyHash: detalhesEndereco.paymentCredential?.hash || "" });
         const policyId = mintingPolicyToId(politica);
@@ -97,6 +104,9 @@ export default function AppAluno() {
     try {
       setProcessando(true);
       
+      // IMPORTAÇÃO DINÂMICA: Novamente, carrega as funções do Lucid na hora de montar a transação
+      const { getAddressDetails, mintingPolicyToId, scriptFromNative } = await import("@lucid-evolution/lucid");
+      
       const detalhesEndereco = getAddressDetails(endereco);
       const politica = scriptFromNative({ type: "sig", keyHash: detalhesEndereco.paymentCredential?.hash || "" });
       const policyId = mintingPolicyToId(politica);
@@ -122,12 +132,12 @@ export default function AppAluno() {
         body: JSON.stringify({ id: catracaId, txHash, tokensPagos: custo })
       });
 
-      // SE A CATRACA BARRAR (Erro 403, 400, etc)
+      // SE A CATRACA BARRAR
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || "Acesso negado pela catraca.");
         setProcessando(false);
-        return; // O return impede que o código continue e mostre a tela verde
+        return;
       }
 
       // SE TUDO DEU CERTO
@@ -150,11 +160,9 @@ export default function AppAluno() {
       const response = await fetch("/api/catraca", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Enviamos o custo também para a validação de horário não falhar
         body: JSON.stringify({ id: catracaId, txHash: "ACESSO_SUBSIDIADO_UNB", tokensPagos: custo })
       });
 
-      // Verifica se a catraca barrou o acesso subsidiado fora de hora
       if (!response.ok) {
         const data = await response.json();
         alert(data.error || "Acesso subsidiado negado pela catraca.");
@@ -216,7 +224,7 @@ export default function AppAluno() {
               </div>
             )}
 
-            {/* CAIXA VERMELHA - DEDURANDO O ENDEREÇO NÃO CADASTRADO */}
+            {/* CAIXA VERMELHA */}
             {!alunoLogado && endereco && (
               <div className="mb-4 bg-red-900/30 p-3 rounded-xl border border-red-800">
                 <p className="text-red-400 text-xs font-bold mb-1">Carteira não cadastrada no BD:</p>

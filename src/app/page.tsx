@@ -13,7 +13,7 @@ const TABELA_PRECOS: Record<string, { cafe: number; almoco: number; jantar: numb
 
 const BANCO_DE_DADOS_ALUNOS: Record<string, any> = {
   "241008569": { 
-    nome: "Gustavo Neri", 
+    nome: "Gustavo Néri", 
     curso: "Engenharia de Redes de Comunicação", 
     grupo: "Grupo II", 
     carteira_registrada: "addr_test1qrg7cvzegnqq9jcws8vspwfpkchxcsmu0f4qke3eyzttt4rdd8878dlhqkkqmgk4qzezc855e2gs8q5q76hhwffw3rdsv7ylvj" 
